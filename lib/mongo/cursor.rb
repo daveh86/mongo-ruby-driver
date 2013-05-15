@@ -12,7 +12,8 @@ module Mongo
       :order, :hint, :snapshot, :timeout,
       :full_collection_name, :transformer,
       :options, :cursor_id, :show_disk_loc,
-      :comment, :read, :tag_sets, :acceptable_latency
+      :comment, :read, :tag_sets, :acceptable_latency, 
+      :min, :max
 
     # Create a new cursor.
     #
@@ -41,6 +42,8 @@ module Mongo
       @return_key = opts.fetch(:return_key, nil)
       @show_disk_loc = opts.fetch(:show_disk_loc, nil)
       @comment    = opts[:comment]
+      @min_index_val = opts[:min]
+      @max_index_val = opts[:max]
 
       # Wire-protocol settings
       @fields     = convert_fields_for_query(opts[:fields])
@@ -404,6 +407,8 @@ module Mongo
         :max_scan => @max_scan,
         :return_key => @return_key,
         :show_disk_loc => @show_disk_loc,
+        :min => @min_index_val,
+        :max => @max_index_val,
         :comment  => @comment ]
     end
 
@@ -584,6 +589,8 @@ module Mongo
       spec['$maxScan']  = @max_scan if @max_scan
       spec['$returnKey']   = true if @return_key
       spec['$showDiskLoc'] = true if @show_disk_loc
+      spec['$min'] = true if @min_index_val
+      spec['$max'] = true if @max_index_val
       spec['$comment']  = @comment if @comment
       if needs_read_pref?
         read_pref = Mongo::ReadPreference::mongos(@read, @tag_sets)
@@ -598,7 +605,8 @@ module Mongo
 
     def query_contains_special_fields?
       @order || @explain || @hint || @snapshot || @show_disk_loc ||
-        @max_scan || @return_key || @comment || needs_read_pref?
+        @max_scan || @return_key || @comment || @min_index_val ||
+        @max_index_val || needs_read_pref?
     end
 
     def close_cursor_if_query_complete

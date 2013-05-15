@@ -15,7 +15,9 @@ module Mongo
     # Read Preference
     attr_accessor :read,
                   :tag_sets,
-                  :acceptable_latency
+                  :acceptable_latency,
+                  :min,
+                  :max
 
     # Initialize a collection object.
     #
@@ -142,6 +144,20 @@ module Mongo
       @hint = hint
       self
     end
+ 
+    # Set a min index value using a doc.
+    # @param [Object] min index value
+    def min=(min=nil)
+      @min_index_val = min
+      self
+    end
+
+    # Set a max index value using a doc.
+    # @param [Object] max index value
+    def max=(max=nil)
+      @max_index_val = max
+      self
+    end
 
     # Query the database.
     #
@@ -183,6 +199,8 @@ module Mongo
     #   using MongoDB > 1.1
     # @option opts [String] :named_hint for specifying a named index as a hint, will be overriden by :hint
     #   if :hint is also provided.
+    # @option opts [Object] :min for specifying a minimum index bound
+    # @option opts [Object] :max for specifying a maximum index bound
     # @option opts [Boolean] :snapshot (false) if true, snapshot mode will be used for this query.
     #   Snapshot mode assures no duplicates are returned, or objects missed, which were preset at both the start and
     #   end of the query's execution.
@@ -229,6 +247,8 @@ module Mongo
       read               = opts.delete(:read) || @read
       tag_sets           = opts.delete(:tag_sets) || @tag_sets
       acceptable_latency = opts.delete(:acceptable_latency) || @acceptable_latency
+      min                = opts.delete(:min)
+      max                = opts.delete(:max)
 
       if timeout == false && !block_given?
         raise ArgumentError, "Collection#find must be invoked with a block when timeout is disabled."
@@ -259,7 +279,9 @@ module Mongo
         :read               => read,
         :tag_sets           => tag_sets,
         :comment            => comment,
-        :acceptable_latency => acceptable_latency
+        :acceptable_latency => acceptable_latency,
+        :min                => min,
+        :max                => max
       })
 
       if block_given?
